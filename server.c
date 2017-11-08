@@ -33,7 +33,7 @@ int main (int argc, char **argv) {
     printf("servidor ativo\n");
     if (clock_gettime(CLOCK_MONOTONIC, &now) != 0) jkl(3);
     printf("time res = %ld, %ld\n", then.tv_sec, then.tv_nsec);
-    ini_time = now.tv_nsec;
+    ini_time = now.tv_sec;
     while (1) {
         // timing
         then = now;
