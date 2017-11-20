@@ -3,6 +3,7 @@
 #include <string.h>
 #include <time.h>
 #include <errno.h>
+#include <inttypes.h>
 // sockets in linux libraries
 #include <unistd.h>
 #include <sys/types.h>
@@ -11,14 +12,23 @@
 #include <netdb.h>
 #include <fcntl.h>
 
+//#define TESTING
+
 #define MAX_CLIENTS 20
 #define NDEPENDENCIES 3
-#define SERVER_PORT 65432
-#define CLIENT_PORT 54321
+
+#ifndef TESTING
+    #define SERVER_PORT 65432
+    #define CLIENT_PORT 54321
+#else
+    #define SERVER_PORT 54321
+    #define CLIENT_PORT 65432
+#endif
+
 
 typedef union {
-    struct { int id, condition; };
-    struct { short left, forward, right; };
+    struct { int16_t id, condition; };
+    struct { int16_t left, forward, right; };
     //struct { long a, b, c, d, e, f, g, h; };
 } NetMssg;
 
@@ -26,16 +36,16 @@ typedef struct a Client;
 typedef struct b Sign;
 
 typedef struct a {
-    Sign *ptr;
-    int id;
+    uint16_t ptr;
+    uint16_t id;
 } Client;
 
 typedef struct b {
-    Sign *children[NDEPENDENCIES], *parents[NDEPENDENCIES];
-    struct sockaddr_in address;
     long last_mssg_t;
-    int id, condition;
-    short left, forward, right;
+    uint32_t s_addr;
+    uint16_t id, condition;
+    uint16_t left, forward, right;
+    uint16_t children[NDEPENDENCIES], parents[NDEPENDENCIES];
 } Sign;
 
 
@@ -67,6 +77,7 @@ int main (int argc, char **argv) {
     printf("size of Sign = %lu, size of Client = %lu\n", sizeof(Sign), sizeof(Client));
     printf("grad's lan ip range = %d\n", 0xac1407ff - 0xac140401);
 
+#ifndef TESTING
     // server loop
     while (1) {
         // timing
@@ -93,15 +104,15 @@ int main (int argc, char **argv) {
 
         usleep(1000000/30); // 30 Hz
     }
-/*
+#else
   // message sending iteration timing test
 
-    printf("0x%02x.%02x.%02x.%02x\n", 172, 20, 7, 255);
+    printf("0x%02x.%02x.%02x.%02x\n", 172, 20, 18, 255);
     client_address.sin_family = AF_INET;
     client_address.sin_port = htons(CLIENT_PORT);
     clock_gettime(CLOCK_MONOTONIC, &then);
-    for (j = 0; j < 4; j++) {
-        for (i = 0xc0a80f01; i < 0xc0a80fff; i++) {
+    //for (j = 0; j < 4; j++) {
+        for (i = 0xac141201; i < 0xac1412ff; i++) {
             client_address.sin_addr.s_addr = htonl(i); 
             while (sendto(sockt, &mssg, sizeof(mssg), 0, (struct sockaddr *)&client_address, sizeof(client_address)) != sizeof(mssg)) {
                 if (errno == 11) {
@@ -110,11 +121,11 @@ int main (int argc, char **argv) {
                 } else jkl(5);
             }
         }
-    }
+    //}
     clock_gettime(CLOCK_MONOTONIC, &now);
     dt = 1000000*(now.tv_sec - then.tv_sec) + (now.tv_nsec - then.tv_nsec)/1000;
     printf("dt = %ld us\n", dt); // in microseconds
-*/
+#endif
 
     return 0;
 }
