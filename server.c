@@ -12,15 +12,16 @@
 #include <netdb.h>
 #include <fcntl.h>
 
-//#define TESTING
+//#define SENDER
 
 #define MAX_CLIENTS 20
 #define NDEPENDENCIES 3
 
-#ifndef TESTING
+#ifndef SENDER
     #define SERVER_PORT 65432
     #define CLIENT_PORT 54321
 #else
+    #define DESTINE_IP 0x7f000001
     #define SERVER_PORT 54321
     #define CLIENT_PORT 65432
 #endif
@@ -59,11 +60,14 @@ int main (int argc, char **argv) {
     struct timespec now, then;
     int sockt, msglen, i = 0, j, t, n_clients = 3, length;
     long ini_time, dt;
+    FILE *file = NULL;
     NetMssg mssg;
 
     // creates a sockt
     if ((sockt = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0) jkl(1);
+#ifndef SENDER
     fcntl(sockt, F_SETFL, O_NONBLOCK); // non-blocking sockt
+#endif
     server_address.sin_family = AF_INET; // address family;
     server_address.sin_addr.s_addr = htonl(INADDR_ANY); // any incoming interface
     server_address.sin_port = htons(SERVER_PORT); // local port number
@@ -77,20 +81,25 @@ int main (int argc, char **argv) {
     printf("size of Sign = %lu, size of Client = %lu\n", sizeof(Sign), sizeof(Client));
     printf("grad's lan ip range = %d\n", 0xac1407ff - 0xac140401);
 
-#ifndef TESTING
+#ifndef SENDER
     // server loop
     while (1) {
         // timing
         then = now;
         if (clock_gettime(CLOCK_MONOTONIC, &now) != 0) jkl(4);
         dt = 1000000*(now.tv_sec - then.tv_sec) + (now.tv_nsec - then.tv_nsec)/1000; // in microseconds
-        printf("t(%d) = %ld s; dt = %ld us\n", i++, (now.tv_sec - ini_time), dt);
+        //printf("t(%d) = %ld s; dt = %ld us\n", i++, (now.tv_sec - ini_time), dt);
 
         // if msglen > sizeof(mssg), no message received is reported
         while ((length = recvfrom(sockt, &mssg, sizeof(mssg), 0, (struct sockaddr *)&client_address, &msglen)) > 0) {
             if (length != sizeof(NetMssg)) {
                 printf("message received from IP 0x%08x, port %d of bad length\n", ntohl(client_address.sin_addr.s_addr), ntohs(client_address.sin_port));
-                //break;
+                break;
+            }
+            if (sendto(sockt, &mssg, sizeof(mssg), 0, (struct sockaddr *)&client_address, sizeof(client_address)) != sizeof(mssg)) {
+                if (errno == 11) {
+                    printf("errno 11\n");
+                } else jkl(6);
             }
             for (i = 0; i < n_clients; i++) {
                 if (clients[i].id == mssg.id) break;
@@ -102,26 +111,26 @@ int main (int argc, char **argv) {
             }
         }
 
-        usleep(1000000/30); // 30 Hz
+        usleep(1000000/5); // 5 Hz
     }
 #else
   // message sending iteration timing test
 
-    printf("0x%02x.%02x.%02x.%02x\n", 172, 20, 18, 255);
+    printf("0x%02x.%02x.%02x.%02x\n", 52, 67, 227, 118);
     client_address.sin_family = AF_INET;
     client_address.sin_port = htons(CLIENT_PORT);
     clock_gettime(CLOCK_MONOTONIC, &then);
-    //for (j = 0; j < 4; j++) {
-        for (i = 0xac141201; i < 0xac1412ff; i++) {
-            client_address.sin_addr.s_addr = htonl(i); 
-            while (sendto(sockt, &mssg, sizeof(mssg), 0, (struct sockaddr *)&client_address, sizeof(client_address)) != sizeof(mssg)) {
-                if (errno == 11) {
-                    printf("errno 11\n");
-                    usleep(500000);
-                } else jkl(5);
-            }
-        }
-    //}
+
+    client_address.sin_addr.s_addr = htonl(DESTINE_IP); 
+    printf("addr = 0x%x\n", client_address.sin_addr.s_addr);
+    if (sendto(sockt, &mssg, sizeof(mssg), 0, (struct sockaddr *)&client_address, sizeof(client_address)) != sizeof(mssg)) {
+        if (errno == 11) {
+            printf("errno 11\n");
+            usleep(500000);
+        } else jkl(5);
+    }
+    length = recvfrom(sockt, &mssg, sizeof(mssg), 0, (struct sockaddr *)&client_address, &msglen);
+    printf("message received from IP 0x%08x, port %d\n", ntohl(client_address.sin_addr.s_addr), ntohs(client_address.sin_port));
     clock_gettime(CLOCK_MONOTONIC, &now);
     dt = 1000000*(now.tv_sec - then.tv_sec) + (now.tv_nsec - then.tv_nsec)/1000;
     printf("dt = %ld us\n", dt); // in microseconds
