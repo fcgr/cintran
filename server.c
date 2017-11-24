@@ -23,7 +23,7 @@
     #define SERVER_PORT 65432
     #define CLIENT_PORT 54321
 #else
-    #define DESTINE_IP 0x7f000001
+    #define DESTINE_IP 0x3443e376
     #define SERVER_PORT 54321
     #define CLIENT_PORT 65432
 #endif
