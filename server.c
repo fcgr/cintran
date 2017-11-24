@@ -18,6 +18,7 @@
 
 #define MAX_CLIENTS 20
 #define NDEPENDENCIES 3
+#define BUFFER_SIZE 128
 
 #ifndef SENDER
     #define SERVER_PORT 65432
@@ -64,8 +65,10 @@ int main (int argc, char **argv) {
     struct timespec now, then;
     long ini_time, dt;
     FILE *file = NULL;
-    DIR *directory = NULL;
+    DIR *in_directory, *out_directory;
     struct dirent *listed_file = NULL;
+    char file_buffer[BUFFER_SIZE];
+    size_t num_read;
 
     // creates a sockt
     if ((sockt = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0) jkl(1);
@@ -81,6 +84,8 @@ int main (int argc, char **argv) {
     printf("servidor ativo\n");
     if (clock_gettime(CLOCK_MONOTONIC, &now) != 0) jkl(3);
     ini_time = now.tv_sec;
+
+
     
     printf("size of Sign = %lu, size of Client = %lu\n", sizeof(Sign), sizeof(Client));
     printf("NAME_MAX = %d\n", NAME_MAX);
@@ -115,6 +120,25 @@ int main (int argc, char **argv) {
                 printf("message received from sign %d: condition = %d\n\tIP = 0x%08x, port %d\n", mssg.id, mssg.condition, ntohl(client_address.sin_addr.s_addr), ntohs(client_address.sin_port));
             }
         }
+
+
+        // opens directories
+        if (!(in_directory = opendir("/var/www/in_php"))) jkl(7);
+        //if (!(out_directory = opendir("/var/www/in_php"))) jkl(8);
+        for (j = 0; j < 2; j++) {
+            readdir(in_directory);
+            //readdir(out_directory);
+        }
+        // read files
+        while (listed_file = readdir(in_directory)) {
+            //if (!(file = fopen(listed_file->d_name, "r"))) jkl(10);
+            printf("%s\n", listed_file->d_name);
+            /*if (!(num_read = fread(file_buffer, BUFFER_SIZE, sizeof(char), file))) jkl(11);
+            file_buffer[num_read] = '\0';
+            printf("read in file %s: %s\n", listed_file->d_name, file_buffer);*/
+            //fclose(file);
+        }
+        closedir(in_directory);
 
         usleep(1000000/5); // 5 Hz
     }
