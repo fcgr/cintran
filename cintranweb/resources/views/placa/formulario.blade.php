@@ -11,7 +11,7 @@
 	</div>
 @endif
 
-<form action="/placas/{{isset($placa) ? 'atualizar' : 'adicionar'}}" method="post">
+<form action="/cintranweb/public/placas/{{isset($placa) ? 'atualizar' : 'adicionar'}}" method="post">
 	<input type="hidden" name="_token" value="{{csrf_token()}}">
 
 	<div>

@@ -16,7 +16,7 @@
 						<td>{{$p->id}} </td>
 						
 						<td>
-							<a href="/placas/{{$p->id}}"> 
+							<a href="/cintranweb/public/placas/{{$p->id}}"> 
 								Visualizar
 							</a>
 						</td>

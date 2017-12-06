@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<link rel="stylesheet" type="text/css" href="/css/app.css">
-	<link href="/css/custom.css" rel="stylesheet">
+	<link rel="stylesheet" type="text/css" href="/cintranweb/public/css/app.css">
+	<link href="/cintranweb/public/css/custom.css" rel="stylesheet">
 	<title>Cintran</title>
 </head>
 <body>

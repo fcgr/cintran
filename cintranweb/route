@@ -1,6 +1,6 @@
 <?php
 
-Route::get('/', 'PlacaController@listar');
+Route::get('/', function(){echo "Works"; } /*'PlacaController@listar'*/);
 
 Route::get('/placas', 'PlacaController@listar');
 Route::get('/placas/{id?}', 'PlacaController@detalhes')->where(['id' => '[0-9]+']);

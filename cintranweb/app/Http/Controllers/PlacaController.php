@@ -4,7 +4,7 @@ use DB;
 use Request;
 use cintran\Entities\Placa;
 use cintran\Entities\Dependencia;
-use cintran\Helpers\FIleTransferHelper;
+use cintran\Helpers\FileTransferHelper;
 
 class PlacaController extends Controller
 {
@@ -34,7 +34,7 @@ class PlacaController extends Controller
 			Dependencia::create(['placa' => $s, 'depende_de' => $id]);
 		}
 
-		FIleTransferHelper::criarArquivoCad($dados);
+		FileTransferHelper::criarArquivoCad($dados);
 
 		return redirect()->action('PlacaController@listar');
 
