@@ -1,7 +1,7 @@
 @extends('layout.principal')
 @section('conteudo')
 
-	<h1>Lista de incidentes</h1>
+	<h1>Lista de funcionários</h1>
 	<a href="/register" class="pull-right btn btn-sm btn-primary">Novo</a> 
 
 	@if( !count($usuarios) )

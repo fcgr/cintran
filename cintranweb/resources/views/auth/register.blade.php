@@ -29,7 +29,7 @@
                             <label for="email" class="col-md-4 control-label">E-Mail</label>
 
                             <div class="col-md-6">
-                                <input id="email" type="email" class="form-control" name="email" value="{{ $usuario->email or old('email') }}" required>
+                                <input id="email" type="text" class="form-control" name="email" value="{{ $usuario->email or old('email') }}" required>
 
                                 @if ($errors->has('email'))
                                     <span class="help-block">
