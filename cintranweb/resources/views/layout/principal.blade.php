@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<link rel="stylesheet" type="text/css" href="/cintranweb/public/css/app.css">
-	<link href="/cintranweb/public/css/custom.css" rel="stylesheet">
+	<link rel="stylesheet" type="text/css" href="/css/app.css">
+	<link href="/css/custom.css" rel="stylesheet">
 	<title>Cintran</title>
 </head>
 <body>
@@ -11,12 +11,38 @@
 		<nav class="navbar navbar-default">
 			<div class="container-fluid">
 				<div class="navbar-header">
-					<a class="navbar-brand" href="/produtos"> Controle de Placas</a>
+					<a class="navbar-brand" href="/placas"> Controle de Placas</a>
 				</div>
 				
-				<ul class="nav navbar-nav navbar-right ">	
-					<li><a href="{{action('PlacaController@listar')}}">Listagem</a></li>
-					<li><a href="{{action('PlacaController@cadastrar')}}">Novo</a></li>
+				<ul class="nav navbar-nav navbar-right ">
+
+					@guest
+					<!--	<li><a href="{{ route('login') }}">Login</a></li>	
+					   	<li><a href="{{ route('register') }}">Registrar</a></li> -->
+					@else
+						<li><a href="{{action('PlacaController@listar')}}">Placas</a></li>
+						<li><a href="{{action('IncidenteController@index')}}">Incidentes</a></li>
+						<li><a href="{{action('FuncionarioController@index')}}">Funcionários</a></li>
+						<li class="dropdown">
+							<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false" aria-haspopup="true">
+								{{ Auth::user()->name }} <span class="caret"></span>
+							</a>
+
+							<ul class="dropdown-menu">
+								<li>
+									<a href="{{ route('logout') }}"
+										onclick="event.preventDefault();
+													document.getElementById('logout-form').submit();">
+										Logout
+									</a>
+
+									<form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+										{{ csrf_field() }}
+									</form>
+								</li>
+							</ul>
+						</li>
+					@endguest
 				</ul>
 			</div>			
 		</nav>
@@ -28,5 +54,6 @@
 		</footer>
 
 	</div>
+	<script src="{{ asset('js/app.js') }}"></script>
 </body>
 </html>

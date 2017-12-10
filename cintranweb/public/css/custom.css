@@ -24,3 +24,7 @@ footer.footer {
 footer.footer p {
   padding: 10px;
 }
+
+.dropdown-menu li a{
+  color: #333 !important;
+}
