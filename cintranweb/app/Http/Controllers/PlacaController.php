@@ -5,43 +5,58 @@ use Request;
 use cintran\Entities\Placa;
 use cintran\Entities\Dependencia;
 use cintran\Helpers\FileTransferHelper;
+use cintran\Http\Requests\PlacasRequest;
 
 class PlacaController extends Controller
 {
+	public function __construct(){
+        $this->middleware('auth');
+    }
 	
-	public function listar(){
+	public function listar($mensagem=null){
+		$mensagem = Request::get('mensagem');
+		$tipo = Request::get('tipo');
 		$placas = Placa::all();
-		return view('placa.listagem')->withPlacas($placas);
+		return view('placa.listagem')->with(["placas" => $placas, "msg" => $mensagem, "tipo" => $tipo]);
 	}
 
-	public function cadastrar(){
-		return view('placa.formulario');
+	public function novo(){
+		return view('placa.formulario')->withPlacas( Placa::allParaDependencias()  );
 	}
 
-	public function adicionar(){
-		$dados = Request::all();		
-		$id = $dados['id'];
-		$entradas =  explode(';', $dados['entrada']);
-		$saidas = explode(';', $dados['saida']);
+	public function cadastrar(PlacasRequest $request){
+		$dados = $request->all();		
+		$mensagem = "Placa repetida nas direções";
+		$tipo = "danger";
 
-		Placa::create($dados);
-
-		foreach ($entradas as $e) {
-			Dependencia::create(['placa' => $id, 'depende_de' => $e]);
+		if(Placa::validarDirecao( [ $dados['id'], $dados['esquerda'], $dados['frente'], $dados['direita'] ] )){
+			Placa::create($dados);
+			FileTransferHelper::criarArquivoCad($dados);
+			$mensagem = "Placa cadastrada com sucesso!";
+			$tipo = "success";
 		}
 
-		foreach ($saidas as $s) {
-			Dependencia::create(['placa' => $s, 'depende_de' => $id]);
-		}
-
-		FileTransferHelper::criarArquivoCad($dados);
-
-		return redirect()->action('PlacaController@listar');
+		return redirect()->action('PlacaController@listar', ["mensagem" => $mensagem, "tipo" => $tipo]);
 
 	}
 
-	public function detalhes($id){
+	public function editar($id){
 		$placa = Placa::find($id);
-		return view('placa.detalhes')->withPlaca($placa);
+		return view('placa.formulario')->withPlaca($placa);
+	}
+
+	public function atualizar($id){
+		$placa = Placa::find($id);
+		$dados = Request::all();
+		$placa->update($dados);
+
+		return redirect()->action('PlacaController@listar', ["mensagem" =>"Placa {$id} alterada com sucesso!"]);
+	}
+
+	public function excluir($id){
+		$placa = Placa::find($id);
+		$placa->delete();
+
+		return redirect()->action('PlacaController@listar', ["mensagem"=>"Placa removida com sucesso!"]);
 	}
 }
