@@ -23,6 +23,11 @@ class IncidenteController extends Controller{
 		$dados = $request->all();		
         
         Incidente::create($dados);
+
+        $placa = Placa::find($dados['placa_id']);
+        $placa->status = 'BAD';
+        $placa->save();
+        
         FileTransferHelper::criarArquivoInc($dados);
 
 		return redirect()->action('IncidenteController@index', ["mensagem" => "Incidente cadastrado com sucesso!"]);
@@ -45,6 +50,10 @@ class IncidenteController extends Controller{
         
         if($dados['resolvido']){
             FileTransferHelper::criarArquivoInc(['placa_id' => $dados['placa_id'], 'tipo' => 0]);
+
+            $placa = Placa::find($dados['placa_id']);
+            $placa->status = 'OK';
+            $placa->save();
         }
 
 		return redirect()->action('IncidenteController@index', ["mensagem" =>"Incidente alterado com sucesso!"]);
