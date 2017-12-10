@@ -25,3 +25,6 @@ Route::get('/home', 'HomeController@index')->name('home');
 
 Route::get('/transmissao',  'TransmissaoController@index');
 Route::post('/transmissao', 'TransmissaoController@index');
+Auth::routes();
+
+Route::get('/home', 'HomeController@index')->name('home');

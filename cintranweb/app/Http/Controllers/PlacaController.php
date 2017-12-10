@@ -42,7 +42,9 @@ class PlacaController extends Controller
 
 	public function editar($id){
 		$placa = Placa::find($id);
-		return view('placa.formulario')->withPlaca($placa);
+		$placas = Placa::allParaDependencias();
+		return view('placa.formulario')->with(["placa" => $placa, "placas" => $placas]);
+
 	}
 
 	public function atualizar($id){
