@@ -4,6 +4,7 @@ namespace cintran\Http\Controllers;
 
 use Request;
 use cintran\User;
+use Illuminate\Support\Facades\Validator;
 
 class FuncionarioController extends Controller
 {
@@ -20,7 +21,10 @@ class FuncionarioController extends Controller
 	public function atualizar($id){
 		$funcionario = User::find($id);
 		$dados = Request::all();
-		$funcionario->update($dados);
+
+		if($this->validator($dados)){
+			$this->update($funcionario, $dados);
+		}
 
 		return redirect()->action('FuncionarioController@index');
 	}
@@ -30,5 +34,22 @@ class FuncionarioController extends Controller
 		$funcionario->delete();
 
 		return redirect()->action('FuncionarioController@index');
+	}
+
+	private function validator(array $data){
+        return Validator::make($data, [
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|max:255|unique:users',
+            'password' => 'required|string|min:4|confirmed',
+        ]);
+	}
+	
+	private function update($user, $data){
+		return $user->update([
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'password' => bcrypt($data['password']),
+            'gerente' => (isset($data['gerente']) ? 1 : 0)
+        ]);
 	}
 }

@@ -8,7 +8,7 @@
                 <div class="panel-heading">Register</div>
 
                 <div class="panel-body">
-                    <form class="form-horizontal" method="POST" action="{{ route('register') }}">
+                    <form class="form-horizontal" method="POST" action="{{ !(isset($usuario)) ? route('register') : ('/funcionarios/atualizar/' . $usuario->id) }}">
                         {{ csrf_field() }}
 
                         <div class="form-group{{ $errors->has('name') ? ' has-error' : '' }}">
@@ -59,6 +59,12 @@
                             <div class="col-md-6">
                                 <input id="password-confirm" type="password" class="form-control" name="password_confirmation" required>
                             </div>
+                        </div>
+
+                        <div class="form-check col-md-6 col-md-offset-4">
+                            <label class="form-check-label">Gerente		
+                                <input type="checkbox" class="form-check-input" name="gerente" @if(isset($usuario) && $usuario->gerente == 1) checked="checked" @endif  }} ></input>
+                            </label>
                         </div>
 
                         <div class="form-group">
