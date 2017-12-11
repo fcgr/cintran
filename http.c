@@ -125,11 +125,12 @@ int main (int argc, char **argv) {
         }
         readdir_path[readdirpath_length] = '\0';
         if (!(read_directory = opendir(readdir_path))) jkl(7);
-        //listed_file = readdir(read_directory); printf("%s\n", listed_file->d_name);
-        //listed_file = readdir(read_directory); printf("%s\n", listed_file->d_name);
+        //readdir(read_directory);
+        //readdir(read_directory);
         while (listed_file = readdir(read_directory)) {
-            printf("spotted file %s\n", readdir_path);
+            if (listed_file->d_name[0] == '.') continue;
             strcpy(&readdir_path[readdirpath_length], listed_file->d_name);
+            printf("spotted file %s\n", readdir_path);
             if (strstr(listed_file->d_name, ".cad") != NULL) {
                 if (!(file = fopen(readdir_path, "r"))) {
                     remove(readdir_path);
@@ -156,6 +157,7 @@ int main (int argc, char **argv) {
                         sign[nsigns].child[i] >= 0 ? (sign[sign[nsigns].child[i]].parent[i] = nsigns) : jkl(15);
                     }
                 }
+                sign_ptr[nsigns].last_seen = time(NULL);
                 nsigns++;
                 fclose(file);
                 remove(readdir_path);
