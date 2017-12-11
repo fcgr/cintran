@@ -46,7 +46,7 @@
 
 	<div class="form-group col-lg-4">
 		<label>Dependencia à esquerda:</label>		
-		<select name="esqueda" class="form-control">
+		<select name="esquerda" class="form-control">
 			@foreach($placas as $p)
 				<option value="{{$p['codigo']}}">{{$p['texto']}}</option>
 			@endforeach
@@ -73,7 +73,7 @@
 
 	<div class="form-group col-lg-4">
 		<label>Dependente à esquerda:</label>		
-		<select name="desqueda" class="form-control">
+		<select name="desquerda" class="form-control">
 			@foreach($placas as $p)
 				<option value="{{$p['codigo']}}">{{$p['texto']}}</option>
 			@endforeach

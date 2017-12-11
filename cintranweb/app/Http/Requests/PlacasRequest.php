@@ -24,8 +24,8 @@ class PlacasRequest extends FormRequest
     public function rules()
     {
         return [    'id' => 'required|numeric',
-                    'latitude' => 'max:50',
-                    'longitude' => 'max:50',
+                    'latitude' => 'nullable|max:50',
+                    'longitude' => 'nullable|max:50',
                     'altura' => 'nullable|numeric',
                     'tempo_transmissao' => 'nullable|numeric',
                     'velocidade_via' => 'nullable|numeric',

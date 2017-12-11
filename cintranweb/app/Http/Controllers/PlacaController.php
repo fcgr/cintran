@@ -36,17 +36,24 @@ class PlacaController extends Controller
 			$tipo = "success";
 		}
 
-		$placa = Placa::find($dados['desquerda']);
-		$placa->esqueda = $dados['id'];
-		$placa->save();
 
-		$placa = Placa::find($dados['dtras']);
-		$placa->frente = $dados['id'];
-		$placa->save();
+		if($dados['desquerda']){
+			$placa = Placa::find($dados['desquerda']);
+			$placa->direita = $dados['id'];
+			$placa->save();
+		}
 
-		$placa = Placa::find($dados['ddireita']);
-		$placa->direita = $dados['id'];
-		$placa->save();
+		if($dados['dtras']){
+			$placa = Placa::find($dados['dtras']);
+			$placa->frente = $dados['id'];
+			$placa->save();
+		}
+
+		if($dados['ddireita']){
+			$placa = Placa::find($dados['ddireita']);
+			$placa->esquerda = $dados['id'];
+			$placa->save();
+		}
 
 		return redirect()->action('PlacaController@listar', ["mensagem" => $mensagem, "tipo" => $tipo]);
 
