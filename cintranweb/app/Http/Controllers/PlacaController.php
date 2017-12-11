@@ -29,30 +29,17 @@ class PlacaController extends Controller
 		$mensagem = "Placa repetida nas direções";
 		$tipo = "danger";
 
-		if(Placa::validarDirecao( [ $dados['id'], $dados['esquerda'], $dados['frente'], $dados['direita'] ] )){
-			Placa::create($dados);
+		if(Placa::validarDirecao( [ $dados['id'], $dados['esquerda'], $dados['frente'], $dados['direita'],
+									$dados['desquerda'], $dados['dtras'], $dados['ddireita'] ] )){
+			$placa = Placa::create($dados);
 			FileTransferHelper::criarArquivoCad($dados);
 			$mensagem = "Placa cadastrada com sucesso!";
 			$tipo = "success";
-		}
-
-
-		if($dados['desquerda']){
-			$placa = Placa::find($dados['desquerda']);
-			$placa->direita = $dados['id'];
-			$placa->save();
-		}
-
-		if($dados['dtras']){
-			$placa = Placa::find($dados['dtras']);
-			$placa->frente = $dados['id'];
-			$placa->save();
-		}
-
-		if($dados['ddireita']){
-			$placa = Placa::find($dados['ddireita']);
-			$placa->esquerda = $dados['id'];
-			$placa->save();
+			$placa->atualizarDependencias($dados);
+			
+		}else{
+			$mensagem = "Falha ao analisar dependencias. Favor verificar se existe repetição ou auto dependência";
+			$tipo = "danger";
 		}
 
 		return redirect()->action('PlacaController@listar', ["mensagem" => $mensagem, "tipo" => $tipo]);
@@ -69,9 +56,26 @@ class PlacaController extends Controller
 	public function atualizar($id){
 		$placa = Placa::find($id);
 		$dados = Request::all();
-		$placa->update($dados);
+		$mensagem = "";
+		$tipo = "";
+		if(!$placa){
+			return redirect()->action('PlacaController@listar', ["mensagem" =>"Placa {$id} não encontra!", "tipo" => "danger"]);
+		}
+		if(Placa::validarDirecao( [ $dados['id'], $dados['esquerda'], $dados['frente'], $dados['direita'],
+			$dados['desquerda'], $dados['dtras'], $dados['ddireita'] ] ) ){
+			
+			$placa->update($dados);
+			FileTransferHelper::criarArquivoCad($dados);
+			$mensagem = "Placa cadastrada com sucesso!";
+			$tipo = "success";
+			$placa->atualizarDependencias($dados);
 
-		return redirect()->action('PlacaController@listar', ["mensagem" =>"Placa {$id} alterada com sucesso!"]);
+		}else{
+			$mensagem = "Falha ao analisar dependencias. Favor verificar se existe repetição ou autodependência";
+			$tipo = "danger";
+		}		
+
+		return redirect()->action('PlacaController@listar', ["mensagem" =>$mensagem, "tipo" => $tipo ]);
 	}
 
 	public function excluir($id){

@@ -11,18 +11,43 @@ class Placa extends Model{
 
     public static function validarDirecao($placas){
         $total = count($placas);
+        
         if($total > 1){
+
             for($i = 0; $i < $total; $i++){
                 for($j = $i + 1; $j < $total; $j++){
-                    if(!empty($placas[$i]) && !empty($placas[$j])){
-                        if($placas[$i] == $placas[$j])
+                    if($placas[$i] && $placas[$j]){
+                        echo "i= $placas[$i]; j=$placas[$j];<br />";
+                        if($placas[$i] == $placas[$j]){
                             return false;
+                        }
                     }
                 }
             }
+
         }
 
         return true;
+    }
+
+    public function atualizarDependencias($dados){
+        if($dados['desquerda']){
+            $placa = Placa::find($dados['desquerda']);
+            $placa->direita = $this->id;
+            $placa->save();
+        }
+
+        if($dados['dtras']){
+            $placa = Placa::find($dados['dtras']);
+            $placa->frente = $this->id;
+            $placa->save();
+        }
+
+        if($dados['ddireita']){
+            $placa = Placa::find($dados['ddireita']);
+            $placa->esquerda = $this->id;
+            $placa->save();
+        }
     }
 
     public static function allParaDependencias(){
