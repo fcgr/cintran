@@ -41,21 +41,14 @@ SignPtr sign_ptr[MAX_SIGNS];
 int listen_socket, connected_socket[MAXCONNECTIONS], num_connected = 0, nsigns = 0;
 char readdir_path[50] = "/var/www/out_php/";
 char writedir_path[50] = "/var/www/in_php/";
-char *answer_msg = 
-    "HTTP/1.1 200 OK\015\012"\
-    "Connection: close\015\012"\
-    "Last-Modified: Fri Dec  8 17:15:51 UTC 2017\015\012"\
-    "Content-Length: 3\015\012"\
-    "Content-Type: text/html\015\012"\
-    "\015\012"\
-    "000\n";
+char answer_msg[] = "HTTP/1.1 200 OK\015\012Connection: close\015\012Last-Modified: Fri Dec  8 17:15:51 UTC 2017\015\012Content-Length: 3\015\012Content-Type: text/html\015\012\015\012000\n";
 
 int main (int argc, char **argv) {
     struct sockaddr_in local_address, remote_address;
     int msg_length, i, j, k, answer_length;
     socklen_t address_length = sizeof(struct sockaddr_in);
     char msg_buffer[BUFFER_SIZE];
-    unsigned int block_flag, issue_number;
+    unsigned int block_flag, issue_number = 0;
     time_t initial_time = time(NULL);
     FILE *file = NULL;
     DIR *read_directory;
@@ -106,13 +99,14 @@ int main (int argc, char **argv) {
             //fcntl(connected_socket[i], F_SETFL, block_flag);
             for (j = 0; j < nsigns && sign_ptr[j].id != sign_id; j++);
             if (j >= nsigns) {
+                printf("no sign with this id\n");
                 close(connected_socket[i]);
                 connected_socket[i--] = connected_socket[--num_connected];
                 jkl(5); continue;
             }
             for (k = 0; k < 3; k++) {
                 if (sign[j].parent[k] >= 0)
-                    answer_msg[answer_length + k-4] = sign[j].direction[k] = sign[sign[j].parent[k]].here;
+                    answer_msg[answer_length + k - 4] = sign[j].direction[k] = sign[sign[j].parent[k]].here;
             }
             sign[j].here = (traffic_condition > sign[j].incident) ? traffic_condition : sign[j].incident;
             sign_ptr[j].last_seen = time(NULL);
@@ -191,7 +185,7 @@ int main (int argc, char **argv) {
         for (i = 0; i < nsigns; i++) {
             if (time(NULL) - sign_ptr[i].last_seen < 30) continue;
             printf("long time no see sign\n");
-            sprintf(writedir_path, "/var/www/in_php/%04x.prob", issue_number);
+            sprintf(writedir_path, "/var/www/in_php/%04x.prob", issue_number++);
             if (!(file = fopen(writedir_path, "w"))) { jkl(17); continue; }
             fprintf(file, "%d|1", sign_ptr[i].id);
             fclose(file);
