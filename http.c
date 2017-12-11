@@ -39,8 +39,8 @@ typedef struct {
 Sign sign[MAX_SIGNS];
 SignPtr sign_ptr[MAX_SIGNS];
 int listen_socket, connected_socket[MAXCONNECTIONS], num_connected = 0, nsigns = 0;
-char readdir_path[50] = "/var/www/out_php/";
-char writedir_path[50] = "/var/www/in_php/";
+char readdir_path[50] = "/var/www/html/out_php/";
+char writedir_path[50] = "/var/www/html/in_php/";
 char answer_msg[] = "HTTP/1.1 200 OK\015\012Connection: close\015\012Last-Modified: Fri Dec  8 17:15:51 UTC 2017\015\012Content-Length: 3\015\012Content-Type: text/html\015\012\015\012000\n";
 
 int main (int argc, char **argv) {
@@ -57,6 +57,7 @@ int main (int argc, char **argv) {
     size_t nread, readdirpath_length;
     int16_t sign_id;
     char incident_type, traffic_condition;
+    char *answp = NULL;
 
     signal(SIGINT, signal_handler);
     if ((listen_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0) jkl(-1);
@@ -67,6 +68,7 @@ int main (int argc, char **argv) {
     if (bind(listen_socket, (struct sockaddr *)&local_address, sizeof(local_address)) < 0) jkl(-2);
     if (listen(listen_socket, MAXPENDING) < 0) jkl(-3);
     answer_length = strlen(answer_msg);
+    answp = &answer_msg[answer_length - 4];
     readdirpath_length = strlen(readdir_path);
     printf("server online\n");
     
@@ -99,20 +101,22 @@ int main (int argc, char **argv) {
             //fcntl(connected_socket[i], F_SETFL, block_flag);
             for (j = 0; j < nsigns && sign_ptr[j].id != sign_id; j++);
             if (j >= nsigns) {
-                printf("no sign with this id\n");
+                printf("no sign found of the id provided by message\n");
                 close(connected_socket[i]);
                 connected_socket[i--] = connected_socket[--num_connected];
-                jkl(5); continue;
+                continue;
             }
             for (k = 0; k < 3; k++) {
-                if (sign[j].parent[k] >= 0)
+                if (sign[j].parent[k] >= 0 && sign[sign[j].parent[k]].here >= 0)
                     answer_msg[answer_length + k - 4] = sign[j].direction[k] = sign[sign[j].parent[k]].here;
+                else
+                    answer_msg[answer_length + k - 4] = '9';
             }
             sign[j].here = (traffic_condition > sign[j].incident) ? traffic_condition : sign[j].incident;
             sign_ptr[j].last_seen = time(NULL);
             if (send(connected_socket[i], answer_msg, answer_length, 0) != answer_length) jkl(6);
             //fcntl(connected_socket[i], F_SETFL, O_NONBLOCK);
-            printf("message sent\n");
+            printf("message sent: %c%c%c\n", answp[0], answp[1], answp[2]);
             close(connected_socket[i]);
             connected_socket[i--] = connected_socket[--num_connected];
             printf("connection closed\n");
@@ -168,9 +172,10 @@ int main (int argc, char **argv) {
                 }
                 for (i =0; i < nsigns && sign_ptr[i].id != sign_id; i++);
                 if (i >= nsigns) {
+                    printf("sign of the reported incident not found\n");
                     fclose(file);
                     remove(readdir_path);
-                    jkl(12); continue;
+                    continue;
                 }
                 sign[i].incident = incident_type;
                 if (sign[i].here < incident_type)
@@ -183,9 +188,9 @@ int main (int argc, char **argv) {
         closedir(read_directory);
 
         for (i = 0; i < nsigns; i++) {
-            if (time(NULL) - sign_ptr[i].last_seen < 30) continue;
+            if (time(NULL) - sign_ptr[i].last_seen < 5*60) continue;
             printf("long time no see sign\n");
-            sprintf(writedir_path, "/var/www/in_php/%04x.prob", issue_number++);
+            sprintf(writedir_path, "/var/www/html/in_php/%04x.prob", issue_number++);
             if (!(file = fopen(writedir_path, "w"))) { jkl(17); continue; }
             fprintf(file, "%d|1", sign_ptr[i].id);
             fclose(file);
