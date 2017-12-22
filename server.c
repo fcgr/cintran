@@ -19,12 +19,14 @@
 #define MAX_CLIENTS 20
 #define NDEPENDENCIES 3
 #define BUFFER_SIZE 128
-
+// new ip1 = 54.233.243.135
+// new ip2 = 52.14.196.137
 #ifndef SENDER
     #define SERVER_PORT 65432
     #define CLIENT_PORT 54321
 #else
-    #define DESTINE_IP 0x3443e376
+    #define DESTIN_1_IP 0x36e9f387
+    #define DESTIN_2_IP 0x340ec489
     #define SERVER_PORT 54321
     #define CLIENT_PORT 65432
 #endif
@@ -61,7 +63,7 @@ void jkl (int i);
 int main (int argc, char **argv) {
     struct sockaddr_in server_address, client_address;
     int sockt, msglen, i = 0, j, t, n_clients = 3, length;
-    NetMssg mssg;
+    char mssg[1500];
     struct timespec now, then;
     long ini_time, dt;
     FILE *file = NULL;
@@ -72,9 +74,7 @@ int main (int argc, char **argv) {
 
     // creates a sockt
     if ((sockt = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0) jkl(1);
-#ifndef SENDER
     fcntl(sockt, F_SETFL, O_NONBLOCK); // non-blocking sockt
-#endif
     server_address.sin_family = AF_INET; // address family;
     server_address.sin_addr.s_addr = htonl(INADDR_ANY); // any incoming interface
     server_address.sin_port = htons(SERVER_PORT); // local port number
@@ -84,12 +84,6 @@ int main (int argc, char **argv) {
     printf("servidor ativo\n");
     if (clock_gettime(CLOCK_MONOTONIC, &now) != 0) jkl(3);
     ini_time = now.tv_sec;
-
-
-    
-    printf("size of Sign = %lu, size of Client = %lu\n", sizeof(Sign), sizeof(Client));
-    printf("NAME_MAX = %d\n", NAME_MAX);
-    //printf("grad's lan ip range = %d\n", 0xac1407ff - 0xac140401);
 
 #ifndef SENDER
     // server loop
@@ -101,65 +95,43 @@ int main (int argc, char **argv) {
         //printf("t(%d) = %ld s; dt = %ld us\n", i++, (now.tv_sec - ini_time), dt);
 
         // if msglen > sizeof(mssg), no message received is reported
-        while ((length = recvfrom(sockt, &mssg, sizeof(mssg), 0, (struct sockaddr *)&client_address, &msglen)) > 0) {
-            if (length != sizeof(NetMssg)) {
-                printf("message received from IP 0x%08x, port %d of bad length\n", ntohl(client_address.sin_addr.s_addr), ntohs(client_address.sin_port));
-                break;
-            }
-            if (sendto(sockt, &mssg, sizeof(mssg), 0, (struct sockaddr *)&client_address, sizeof(client_address)) != sizeof(mssg)) {
+        while ((length = recvfrom(sockt, mssg, sizeof(mssg), 0, (struct sockaddr *)&client_address, &msglen)) > 0) {
+            printf("message received from IP 0x%08x, port %d of bad length\n", ntohl(client_address.sin_addr.s_addr), ntohs(client_address.sin_port));
+            sprintf(mssg, "IP = 0x%08x, port = %d\n", ntohl(client_address.sin_addr.s_addr), ntohs(client_address.sin_port));
+            length = strlen(mssg);
+            if (sendto(sockt, mssg, sizeof(mssg), 0, (struct sockaddr *)&client_address, sizeof(client_address)) <= 0) {
                 if (errno == 11) {
                     printf("errno 11\n");
                 } else jkl(6);
             }
-            for (i = 0; i < n_clients; i++) {
-                if (clients[i].id == mssg.id) break;
-            }
-            if (i == n_clients) {
-                printf("message received from UNKNOWN sign %d: condition = %d\n\tIP = 0x%08x, port %d\n", mssg.id, mssg.condition, ntohl(client_address.sin_addr.s_addr), ntohs(client_address.sin_port));
-            } else {
-                printf("message received from sign %d: condition = %d\n\tIP = 0x%08x, port %d\n", mssg.id, mssg.condition, ntohl(client_address.sin_addr.s_addr), ntohs(client_address.sin_port));
-            }
         }
-
-
-        // opens directories
-        if (!(in_directory = opendir("/var/www/in_php"))) jkl(7);
-        //if (!(out_directory = opendir("/var/www/in_php"))) jkl(8);
-        for (j = 0; j < 2; j++) {
-            readdir(in_directory);
-            //readdir(out_directory);
-        }
-        // read files
-        while (listed_file = readdir(in_directory)) {
-            //if (!(file = fopen(listed_file->d_name, "r"))) jkl(10);
-            printf("%s\n", listed_file->d_name);
-            /*if (!(num_read = fread(file_buffer, BUFFER_SIZE, sizeof(char), file))) jkl(11);
-            file_buffer[num_read] = '\0';
-            printf("read in file %s: %s\n", listed_file->d_name, file_buffer);*/
-            //fclose(file);
-        }
-        closedir(in_directory);
-
         usleep(1000000/5); // 5 Hz
     }
 #else
   // message sending iteration timing test
 
-    printf("0x%02x.%02x.%02x.%02x\n", 52, 67, 227, 118);
     client_address.sin_family = AF_INET;
     client_address.sin_port = htons(CLIENT_PORT);
     clock_gettime(CLOCK_MONOTONIC, &then);
 
-    client_address.sin_addr.s_addr = htonl(DESTINE_IP); 
-    printf("addr = 0x%x\n", client_address.sin_addr.s_addr);
-    if (sendto(sockt, &mssg, sizeof(mssg), 0, (struct sockaddr *)&client_address, sizeof(client_address)) != sizeof(mssg)) {
-        if (errno == 11) {
-            printf("errno 11\n");
-            usleep(500000);
-        } else jkl(5);
+    for (i = 1; i <= 2; i++) {
+        client_address.sin_addr.s_addr = htonl((i == 1) ? DESTIN_1_IP : DESTIN_2_IP);
+        printf("\n\naddr = 0x%x\n", i, client_address.sin_addr.s_addr);
+        do {
+            if (sendto(sockt, mssg, 16, 0, (struct sockaddr *)&client_address, sizeof(client_address)) <= 0) {
+                if (errno == 11) {
+                    printf("errno 11\n");
+                    usleep(500000);
+                } else jkl(5);
+            }
+            usleep(300000);
+            printf("checking reception from 0x%x\n", client_address.sin_addr.s_addr);
+        } while ((length = recvfrom(sockt, mssg, sizeof(mssg), 0, (struct sockaddr *)&client_address, &msglen)) > 0);
+        printf("message received from IP 0x%08x, port %d\n", ntohl(client_address.sin_addr.s_addr), ntohs(client_address.sin_port));
+        mssg[length] = '\0';
+        fwrite(mssg, sizeof(char), length, stdout);
     }
-    length = recvfrom(sockt, &mssg, sizeof(mssg), 0, (struct sockaddr *)&client_address, &msglen);
-    printf("message received from IP 0x%08x, port %d\n", ntohl(client_address.sin_addr.s_addr), ntohs(client_address.sin_port));
+
     clock_gettime(CLOCK_MONOTONIC, &now);
     dt = 1000000*(now.tv_sec - then.tv_sec) + (now.tv_nsec - then.tv_nsec)/1000;
     printf("dt = %ld us\n", dt); // in microseconds
