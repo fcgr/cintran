@@ -14,7 +14,7 @@
 #include <netdb.h>
 #include <fcntl.h>
 
-//#define SENDER
+#define SENDER
 
 #define MAX_CLIENTS 20
 #define NDEPENDENCIES 3
@@ -116,7 +116,7 @@ int main (int argc, char **argv) {
 
     for (i = 1; i <= 2; i++) {
         client_address.sin_addr.s_addr = htonl((i == 1) ? DESTIN_1_IP : DESTIN_2_IP);
-        printf("\n\naddr = 0x%x\n", i, client_address.sin_addr.s_addr);
+        printf("\n\naddr %d = 0x%x\n", i, client_address.sin_addr.s_addr);
         do {
             if (sendto(sockt, mssg, 16, 0, (struct sockaddr *)&client_address, sizeof(client_address)) <= 0) {
                 if (errno == 11) {
